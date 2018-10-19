@@ -10,6 +10,7 @@ var game = {
     textY: 500,
     cards: [],
     nextCard:0,
+    texts:[],
     reset: function () {
         this.canvas.width = this.width;
         this.canvas.height = this.height;
@@ -29,9 +30,14 @@ var game = {
     start: function () {
         this.reset();
         this.canvas.addEventListener("click", clickEvent);
-        this.interval = setInterval(update, 20);
     },
     showText: function (text, line, x = 10, y = 30) {  // max length for 1 row - 45
+        if(this.texts.length == 2){
+            this.texts[0] = this.texts[1];
+            this.texts.push('text');
+        }
+        if()
+        this.clearText();
         this.ctx.font = this.font;
         this.ctx.fillStyle = this.w;
         this.ctx.fillText(text, this.textX + x, this.textY + y + ((line - 1) * 40));
@@ -52,6 +58,10 @@ var game = {
         var img = document.createElement('img');
         img.src = path;
         this.cards.push(img);
+    },
+    startMaze:function () {
+
+        this.interval = setInterval(update, 20);
     }
 }
 
@@ -76,20 +86,6 @@ function update() {
     // console.log('a')
 }
 
-function generateCards() {
-    // game.cards.push();
-    var c = document.createElement("canvas");
-    // c.width =
-}
-
-    function drawBall(ballX, ballY, Radius, fill){
-        ctx.beginPath();
-        ctx.arc(ballX, ballY, Radius, 0, 2*Math.PI);
-        if(fill){
-            ctx.fill();
-        }
-        ctx.stroke();
-    }
 
 
 
