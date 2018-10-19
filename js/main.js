@@ -9,6 +9,7 @@ var game = {
     textX: 25,
     textY: 500,
     cards: [],
+    nextCard:0,
     reset: function () {
         this.canvas.width = this.width;
         this.canvas.height = this.height;
@@ -27,6 +28,7 @@ var game = {
     },
     start: function () {
         this.reset();
+        this.canvas.addEventListener("click", clickEvent);
         this.interval = setInterval(update, 20);
     },
     showText: function (text, line, x = 10, y = 30) {  // max length for 1 row - 45
@@ -40,7 +42,16 @@ var game = {
     //     this.ctx.fillText(text,this.textX+x, this.textY+y + ((line-1) * 40));
     // },
     drawCard: function (cardNumber) {
-
+        if (this.cards.length > cardNumber){
+            console.log(this.nextCard);
+            this.ctx.drawImage(this.cards[cardNumber], 0, 0, this.cards[cardNumber].width, this.cards[cardNumber].height, 25, 25, 750, 430);
+            this.nextCard++;
+        }
+    },
+    addCard:function (path) {   // (750 x 430) px
+        var img = document.createElement('img');
+        img.src = path;
+        this.cards.push(img);
     }
 }
 
@@ -50,8 +61,18 @@ function init() {
     game.showText('a☝sdasdasdasdasdasdasdasdasdsadadssadsadsadss',1);
     game.showText('asd',2);
 }
-
+function generateCards() {
+    game.addCard('img/Odessa.png');
+    game.addCard('img/r1.png');
+    game.addCard('img/r2.png');
+    game.addCard('img/r1.1.png');
+    game.addCard('img/r1.2.png');
+}
+function clickEvent() {
+    game.drawCard(game.nextCard);
+}
 function update() {
+
     // console.log('a')
 }
 
