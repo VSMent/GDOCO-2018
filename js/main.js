@@ -1,6 +1,9 @@
 var game = {
     canvas: document.getElementById('game'),
+    player: document.createElement('canvas'),
+    canv2: document.getElementById('game'),
     ctx: '',
+    mouse:'',
     b: 'black',
     w: 'white',
     font: '30px Arial',
@@ -23,7 +26,14 @@ var game = {
     lvls:[],
     start: function () {
         this.reset();
+        let img = document.createElement('img');
+        img.src = "img/player.png";
+        let x = this.player.getContext("2d");
+            x.drawImage(img,0,0);
+        document.body.insertBefore(this.player, document.body.childNodes[0]);
+        document.body.insertBefore(img, document.body.childNodes[0]);
         this.canvas.addEventListener("click", clickEvent);
+        this.canvas.addEventListener("mousemove", mouseMoveEvent);
     },
     reset: function () {
         this.canvas.width = this.width;
@@ -70,7 +80,7 @@ var game = {
         if(typeof card === typeof []){
             this.frames.push({card:-1,text1:card,text2:text});
         }else if(typeof card === typeof ''){
-            this.frames.push({card: card,text1:text,text2:''});
+            this.frames.push({card: card,text1:text[0],text2:this.texts[text[1]]});
         }else {
             this.frames.push({card: card, text1: this.texts[text[0]], text2: this.texts[text[1]]});
         }
@@ -85,7 +95,7 @@ var game = {
             }else if(typeof this.frames[frame].card === typeof ''){ // maze
                 this.mouseFramer = false;
                 this.startMaze(this.frames[frame].card);
-                this.showText(this.lvls[parseInt(this.frames[frame].card)].mazeName, 1);
+                this.showText(this.lvls[parseInt(this.frames[frame].card)-1].mazeName, 1);
                 this.showText(this.frames[frame].text2, 2);
             }else { // story
                 this.drawCard(this.frames[frame].card);
@@ -110,15 +120,28 @@ var game = {
         // this.ctx.fillStyle = 'red';
         this.ctx.fillRect(this.mazeMargin, this.mazeMargin, this.width-this.mazeMargin*2, 425);
         for(let i = 0; i < l; i++){
-
-            this.ctx.fillStyle = this.b;
-
-            this.ctx.fillRect(
-                this.mazeMargin + this.mazePaddingX + mO[i].x*this.mazeObjSize,
-                this.mazeMargin + this.mazePaddingY + mO[i].y*this.mazeObjSize,
-                this.mazeObjSize,
-                this.mazeObjSize
-            );
+            if(mO[i].type == "wall") {
+                this.ctx.fillStyle = this.b;
+                this.ctx.fillRect(
+                    this.mazeMargin + this.mazePaddingX + mO[i].x*this.mazeObjSize,
+                    this.mazeMargin + this.mazePaddingY + mO[i].y*this.mazeObjSize,
+                    this.mazeObjSize,
+                    this.mazeObjSize
+                );
+            }else if(mO[i].type == "player"){
+                this.ctx.fillStyle = 'red';
+                this.ctx.fillRect(
+                    this.mazeMargin + this.mazePaddingX + mO[i].x*this.mazeObjSize,
+                    this.mazeMargin + this.mazePaddingY + mO[i].y*this.mazeObjSize,
+                    this.mazeObjSize,
+                    this.mazeObjSize
+                );
+                this.ctx.drawImage(
+                    this.player,
+                    this.mazeMargin + this.mazePaddingX + mO[i].x*this.mazeObjSize,
+                    this.mazeMargin + this.mazePaddingY + mO[i].y*this.mazeObjSize
+                );
+            }
             // this.ctx.font = this.font3;
             // this.ctx.fillStyle = 'red';
             // this.ctx.fillText(
@@ -131,6 +154,12 @@ var game = {
     startMaze:function (lvlNumber) {
         this.drawObj(this.lvls[parseInt(lvlNumber)-1]);
         this.interval = setInterval(update, 20);
+    },
+    movePlayer:function () {
+        
+    },
+    checkCollisions:function () {
+        
     }
 }
 function init() {
@@ -170,7 +199,7 @@ function generateLvls() {
                 /*if (pattern[i][j] == 0) { //empty
                     continue;
                 } else */if (pattern[i][j] == 1) {
-                    objects.push(new Obj(j, i, 'wall', 'black'));
+                    objects.push(new Obj(j, i, 'wall'));
                 } else if (pattern[i][j] == 2) {
                     objects.push(new Obj(j, i, 'player'));
                 } else if (pattern[i][j] == 3) {
@@ -187,25 +216,34 @@ function generateLvls() {
             mazeObjects:objects
         });
     }
-
-    // console.log(a);
-    // game.addLvl("Вулиця 1",generateObjects('lvl1'));
 }
 class Obj{
-    constructor(x,y,type = 'empty',c = 'white'){
-        this.type = type;
+    constructor(x,y,type = 'empty'){
         this.x = x;
         this.y = y;
-        this.c = c;
+        this.type = type;
     }
+}
+function mouseMoveEvent(e) {
+    game.mouse = {
+        x:e.clientX-Math.floor(game.canvas.getBoundingClientRect().x),
+        y:e.clientY-Math.floor(game.canvas.getBoundingClientRect().y)
+    };
 }
 function clickEvent() {
     if(game.mouseFramer) {
         game.nFrame(game.nextFrame);
+    }else{
+        console.log(`X:${game.mouse.x} Y:${game.mouse.y}`);
+        // animation
+
+        // check dir
+        // use dir
     }
 }
 function update() {
-
+    game.movePlayer();
+    game.checkCollisions();
     // console.log('a')
 }
 
@@ -220,7 +258,7 @@ function update() {
         }
         kCode = e.keyCode;
     }
-    function keyUp(){
+    function keyUp() {
         kCode = 0;
     }
 
