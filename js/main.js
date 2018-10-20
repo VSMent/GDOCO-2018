@@ -6,11 +6,14 @@ var game = {
     width: 800,
     height: 600,
     font: '30px Arial',
-    textX: 25,
+    font2: '50px Arial',
+    textX: 400,
     textY: 500,
     cards: [],
+    nextFrame:0,
     nextCard:0,
     texts:[],
+    frames:[],
     reset: function () {
         this.canvas.width = this.width;
         this.canvas.height = this.height;
@@ -31,33 +34,57 @@ var game = {
         this.reset();
         this.canvas.addEventListener("click", clickEvent);
     },
-    showText: function (text, line, x = 10, y = 30) {  // max length for 1 row - 45
-        if(this.texts.length == 2){
-            this.texts[0] = this.texts[1];
-            this.texts.push('text');
+    nFrame:function(frame){
+        if (this.frames.length > frame) {
+            this.clear();
+            if(this.frames[frame].card == -1){
+                this.showTitle(this.frames[frame].text1[0],this.frames[frame].text1[1]);
+                this.showText(this.frames[frame].text2[0],1);
+                this.showText(this.frames[frame].text2[1],2);
+            }else {
+                this.drawCard(this.frames[frame].card);
+                this.showText(this.frames[frame].text1, 1);
+                this.showText(this.frames[frame].text2, 2);
+            }
+            this.nextFrame++;
         }
-        if()
-        this.clearText();
+    },
+    showText: function (text, line, x = 0, y = 30) {  // max length for 1 row - 45
+        this.ctx.textAlign = 'center';
         this.ctx.font = this.font;
         this.ctx.fillStyle = this.w;
         this.ctx.fillText(text, this.textX + x, this.textY + y + ((line - 1) * 40));
     },
-    // showTitle: function (text,text2) {
-    //     this.ctx.font = this.font;
-    //     this.ctx.fillStyle = this.w;
-    //     this.ctx.fillText(text,this.textX+x, this.textY+y + ((line-1) * 40));
-    // },
+    clearText: function(){
+        this.ctx.fillStyle = this.b;
+        // this.ctx.fillStyle = 'red';
+        this.ctx.fillRect(0, 490, this.width, this.height);
+    },
+    showTitle: function (text1, text2) {
+        this.ctx.textAlign='center';
+        this.ctx.fillStyle = this.w;
+        this.ctx.font = this.font2;
+        this.ctx.fillText(text1,400, 200 );
+        this.ctx.font = this.font;
+        this.ctx.fillText(text2,400, 300 );
+    },
     drawCard: function (cardNumber) {
-        if (this.cards.length > cardNumber){
-            console.log(this.nextCard);
             this.ctx.drawImage(this.cards[cardNumber], 0, 0, this.cards[cardNumber].width, this.cards[cardNumber].height, 25, 25, 750, 430);
-            this.nextCard++;
-        }
     },
     addCard:function (path) {   // (750 x 430) px
         var img = document.createElement('img');
         img.src = path;
         this.cards.push(img);
+    },
+    addText:function (text) {
+        this.texts.push(text);
+    },
+    addFrame:function (card, text) {
+        if(typeof card === typeof []){
+            this.frames.push({card:-1,text1:card,text2:text});
+        }else {
+            this.frames.push({card: card, text1: this.texts[text[0]], text2: this.texts[text[1]]});
+        }
     },
     startMaze:function () {
 
@@ -67,19 +94,30 @@ var game = {
 
 function init() {
     game.start();
+    generateTexts();
     generateCards();
-    game.showText('a☝sdasdasdasdasdasdasdasdasdsadadssadsadsadss',1);
-    game.showText('asd',2);
+    generateFrames();
+    game.nFrame(game.nextFrame);
+}
+function generateTexts() {
+    game.addText('…через зупинку фінансування будівництва порту');
+    game.addText('царем майбутнє Одеси було під загрозою.');
+    game.addText('Тому місцеві купці вирішили задобрити царя і');
+    game.addText('відправити йому подарунок - 3000 апельсинів');
 }
 function generateCards() {
-    game.addCard('img/Odessa.png');
-    game.addCard('img/r1.png');
-    game.addCard('img/r2.png');
-    game.addCard('img/r1.1.png');
-    game.addCard('img/r1.2.png');
+    game.addCard('img/c1.png');
+    game.addCard('img/c2.png');
+    game.addCard('img/c3.png');
+}
+function generateFrames() {
+    game.addFrame(['Як апельсини Одесу рятували','Керування лише мишкою'],['Для GDOCO 2018, ОНАХТ','Команда "Вісімнадцять по", Тернопіль']);
+    game.addFrame(0,[0,1]);
+    game.addFrame(1,[0,1]);
+    game.addFrame(2,[2,3]);
 }
 function clickEvent() {
-    game.drawCard(game.nextCard);
+    game.nFrame(game.nextFrame);
 }
 function update() {
 
