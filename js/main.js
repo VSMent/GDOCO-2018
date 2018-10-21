@@ -1,6 +1,5 @@
 const game = {
     canvas: document.getElementById('game'),
-    playerCanvas: document.createElement('canvas'),
     ctx: '',
     mouse:'',
     mouseStart:'',
@@ -29,14 +28,7 @@ const game = {
     lvls:[],
     start: function () {
         this.reset();
-        let img = document.createElement('img');
-        img.src = "img/player.png";
-        let x = this.playerCanvas.getContext("2d");
-            x.drawImage(img,0,0);
-        this.playerCanvas.style.display = 'none';
-        img.style.display = 'none';
-        document.body.insertBefore(this.playerCanvas, document.body.childNodes[0]);
-        document.body.insertBefore(img, document.body.childNodes[0]);
+        this.canvas.style.display ='block';
         this.canvas.addEventListener("mousedown", mouseDownEvent);
         this.canvas.addEventListener("mousemove", mouseMoveEvent);
         this.canvas.addEventListener("mouseup", mouseUpEvent);
@@ -56,8 +48,10 @@ const game = {
         this.ctx.strokeStyle = this.w;
         this.ctx.lineWidth = 10;
         this.ctx.lineCap = 'round';
+        this.ctx.beginPath();
         this.ctx.moveTo(50, 480);
         this.ctx.lineTo(750, 480);
+        this.ctx.closePath();
         this.ctx.stroke();
     },
     addCard:function (path) {   // (750 x 430) px
@@ -94,33 +88,27 @@ const game = {
             this.frames.push({card: card, text1: this.texts[text[0]], text2: this.texts[text[1]]});
         }
     },
-    nFrame:function(frame){
+    nFrame:function(frame) {
         if (this.frames.length > frame) {
             this.clear();
-            if(this.frames[frame].card === -1){ // title screen
-                this.showTitle(this.frames[frame].text1[0],this.frames[frame].text1[1]);
-                this.showText(this.frames[frame].text2[0],1);
-                this.showText(this.frames[frame].text2[1],2);
-            }else if(typeof this.frames[frame].card === typeof ''){ // maze
+            if (this.frames[frame].card === -1) { // title screen
+                this.showTitle(this.frames[frame].text1[0], this.frames[frame].text1[1]);
+                this.showText(this.frames[frame].text2[0], 1);
+                this.showText(this.frames[frame].text2[1], 2);
+            } else if (typeof this.frames[frame].card === typeof '') { // maze
                 this.mouseFramer = false;
                 this.startMaze(this.frames[frame].card);
-                this.showText(this.lvls[parseInt(this.frames[frame].card)-1].mazeName, 1);
+                this.showText(this.lvls[parseInt(this.frames[frame].card) - 1].mazeName, 1);
                 this.showText(this.frames[frame].text2, 2);
-            }else { // story
+            } else { // story
                 this.drawCard(this.frames[frame].card);
                 this.showText(this.frames[frame].text1, 1);
                 this.showText(this.frames[frame].text2, 2);
             }
             this.nextFrame++;
+        }else{
+            document.location.reload();
         }
-    },
-    addLvl:function (name,objects) {
-        this.lvls.push({name:name,objects:objects});
-    },
-    clearText: function(){
-        this.ctx.fillStyle = this.b;
-        // this.ctx.fillStyle = 'red';
-        this.ctx.fillRect(0, 490, this.width, this.height);
     },
     drawObj: function (lvlObject) {
         let mO = lvlObject.mazeObjects;
@@ -138,12 +126,11 @@ const game = {
     updatePlayer(){
         this.player.x+=this.playerAcceleration[0];
         this.player.y+=this.playerAcceleration[1];
-        // this.ctx.fillStyle = 'yellow';
-        // this.ctx.fillRect(this.player.x,this.player.y,this.mazeObjSize,this.mazeObjSize);
         this.ctx.strokeStyle = this.b;
         this.ctx.lineWidth = 5;
         this.ctx.beginPath();
         this.ctx.arc(this.player.x,this.player.y,6,0,2*Math.PI);
+        this.ctx.closePath();
         this.ctx.stroke();
     },
     startMaze:function (lvlNumber) {
@@ -180,8 +167,8 @@ const game = {
     },
     updateScreen:function () {
         this.resetMaze();
-        this.checkCollisions();
         this.updatePlayer();
+        this.checkCollisions();
     },
     checkCollisions:function () {
         for (let i = 0; i < this.lvls[this.currentLvl].mazeObjects.length; i++) {
@@ -190,39 +177,41 @@ const game = {
             (this.player.x >= obj.x && this.player.x <= obj.x + this.mazeObjSize) &&
             (this.player.y - this.mazeObjSize*2/5 >= obj.y && this.player.y - this.mazeObjSize*2/5 <= obj.y + this.mazeObjSize)
             ) {
-                // obj.c = 'blue';
-                this.playerAcceleration = [0, 0];
                 this.player.y += 1;
-                // console.log(`X ${this.player.x+this.mazeObjSize} >= ${obj.x} && X ${this.player.x+this.mazeObjSize} <= ${obj.x+this.mazeObjSize}`);
+                this.playerAcceleration = [0, 0];
+                if(obj.type === "finish") this.finish();
             }
             if ( // Right
             (this.player.y >= obj.y && this.player.y < obj.y + this.mazeObjSize) &&
             (this.player.x + this.mazeObjSize*2/5 >= obj.x && this.player.x + this.mazeObjSize*2/5 <= obj.x + this.mazeObjSize)
             ) {
-                // obj.c = 'green';
-                this.playerAcceleration = [0, 0];
                 this.player.x -= 1;
-                // console.log(`Y ${this.player.y} >= ${obj.y} && Y ${this.player.y} <= ${obj.y+this.mazeObjSize}`);
+                this.playerAcceleration = [0, 0];
+                if(obj.type === "finish") this.finish();
             }
             if ( // Left
             (this.player.y >= obj.y && this.player.y <= obj.y + this.mazeObjSize) &&
             (this.player.x - this.mazeObjSize*2/5 <= obj.x + this.mazeObjSize && this.player.x - this.mazeObjSize*2/5> obj.x)
             ) {
-                // obj.c = 'yellow';
-                this.playerAcceleration = [0, 0];
                 this.player.x += 1;
-                // console.log('collide Left', this.player.x,this.player.y,obj.x,obj.y);
+                this.playerAcceleration = [0, 0];
+                if(obj.type === "finish") this.finish();
             }
             if ( // Bottom
             (this.player.x >= obj.x && this.player.x <= obj.x + this.mazeObjSize) &&
             (this.player.y + this.mazeObjSize*2/5 >= obj.y && this.player.y + this.mazeObjSize*2/5 <= obj.y + this.mazeObjSize)
             ) {
-                // obj.c = 'red';
-                this.playerAcceleration = [0, 0];
                 this.player.y -= 1;
-                // console.log('collide Bottom', this.player.x,this.player.y,obj.x,obj.y);
+                this.playerAcceleration = [0, 0];
+                if(obj.type === "finish") this.finish();
             }
         }
+    },
+    finish:function () {
+        clearInterval(this.interval);
+        this.clear();
+        this.mouseFramer = true;
+        this.nFrame(game.nextFrame);
     }
 };
 function init() {
@@ -235,14 +224,18 @@ function init() {
 }
 function generateTexts() {
     game.addText('…через зупинку фінансування будівництва порту');
-    game.addText('царем майбутнє Одеси було під загрозою.');
+    game.addText('царем, майбутнє Одеси було під загрозою.');
     game.addText('Тому місцеві купці вирішили задобрити царя і');
     game.addText('відправити йому подарунок - 3000 апельсинів');
     game.addText('Для цього вони вибрали найвправнішого - Мандарина.');
     game.addText('Завантаживши апельсини на віз, він вирушив у дорогу.');
     game.addText('Більшість доріг Одеси були викладені бруківкою,');
     game.addText('тому віз сильно трясло і апельсини погубилися…');
-    game.addText('Пройди лабіринт. Переміщення свайпами');   // maze
+    game.addText('Переміщення свайпами, зупинка - кліками');   // maze
+    game.addText('Отримавши подарунок - цар дуже зрадів');
+    game.addText('і надав гроші та право на побудову порту');
+    game.addText('Так апельсини врятували місто');
+    game.addText('______The END______');
 }
 function generateCards() {
     game.addCard('img/c1.png');
@@ -251,16 +244,21 @@ function generateCards() {
     game.addCard('img/c4.png');
     game.addCard('img/c5.png');
     game.addCard('img/c6.png');
+    game.addCard('img/c7.png');
+    game.addCard('img/c8.png');
 }
 function generateFrames() {
-    // game.addFrame(['Як апельсини Одесу рятували','Керування лише мишкою'],['Для GDOCO 2018, ОНАХТ','Команда "Вісімнадцять по", Тернопіль']);
-    // game.addFrame(0,[0,1]);
-    // game.addFrame(1,[0,1]);
-    // game.addFrame(2,[2,3]);
-    // game.addFrame(3,[4,5]);
-    // game.addFrame(4,[4,5]);
-    // game.addFrame(5,[6,7]);
+    game.addFrame(['Як апельсини Одесу рятували','Керування лише мишкою. Натисни щоб продовжити'],['Для GDOCO 2018, ОНАХТ','Команда "Вісімнадцять по", Тернопіль']);
+    game.addFrame(0,[0,1]);
+    game.addFrame(1,[0,1]);
+    game.addFrame(2,[2,3]);
+    game.addFrame(3,[4,5]);
+    game.addFrame(4,[4,5]);
+    game.addFrame(5,[6,7]);
     game.addFrame('1',[8,8]);   // maze 1
+    game.addFrame(6,[9,10]);
+    game.addFrame(7,[11,12]);
+    game.addFrame(['Кінець гри',':)'],['Для GDOCO 2018, ОНАХТ','Команда "Вісімнадцять по", Тернопіль']);
 }
 function generateLvls() {
     let data = JSON.parse(lvlsData);
