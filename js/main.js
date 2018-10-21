@@ -1,12 +1,10 @@
 const game = {
     canvas: document.getElementById('game'),
     playerCanvas: document.createElement('canvas'),
-    // canv2: document.getElementById('game'),
     ctx: '',
     mouse:'',
     mouseStart:'',
     player: '',
-    // playerCords:[0,0],
     playerAcceleration:[0,0],
     b: 'black',
     w: 'white',
@@ -20,10 +18,10 @@ const game = {
     nextFrame:0,
     nextCard:0,
     currentLvl:0,
-    mazeObjSize:21,
+    mazeObjSize:20,
     mazeMargin: 25,
-    mazePaddingX: 7.5,
-    mazePaddingY: 2.5,
+    mazePaddingX: 15,
+    mazePaddingY: 13,
     mouseFramer:true,   // next frame on mouse click
     cards: [],
     texts:[],
@@ -73,7 +71,7 @@ const game = {
     addText:function (text) {
         this.texts.push(text);
     },
-    showText: function (text, line, x = 0, y = 30) {  // max length for 1 row - 45
+    showText: function (text, line, x = 0, y = 30) {
         this.ctx.textAlign = 'center';
         this.ctx.font = this.font;
         this.ctx.fillStyle = this.w;
@@ -129,47 +127,24 @@ const game = {
         let l = mO.length;
         this.resetMaze();
         for(let i = 0; i < l; i++){
-            if(mO[i].type === "wall") {
-                mO[i].x = this.mazeMargin + this.mazePaddingX + mO[i].x*this.mazeObjSize;
-                mO[i].y = this.mazeMargin + this.mazePaddingY + mO[i].y*this.mazeObjSize;
-                this.ctx.fillStyle = this.b;
-                this.ctx.fillRect(
-                    mO[i].x,
-                    mO[i].y,
-                    this.mazeObjSize,
-                    this.mazeObjSize
-                );
-            }
+            mO[i].x = this.mazeMargin + this.mazePaddingX + mO[i].x*this.mazeObjSize;
+            mO[i].y = this.mazeMargin + this.mazePaddingY + mO[i].y*this.mazeObjSize;
         }
         this.lvls[this.currentLvl].mazeObjects = mO;
         this.player = this.lvls[this.currentLvl].player;
-        this.player.x = this.mazeMargin + this.mazePaddingX + this.player.x*this.mazeObjSize;
-        this.player.y = this.mazeMargin + this.mazePaddingY + this.player.y*this.mazeObjSize;
+        this.player.x = this.mazeMargin + this.mazePaddingX + (this.player.x+.5)*this.mazeObjSize;
+        this.player.y = this.mazeMargin + this.mazePaddingY + (this.player.y+.5)*this.mazeObjSize;
     },
     updatePlayer(){
-        // this.ctx.fillStyle = this.w;
-        // this.ctx.fillStyle = 'yellow';
-        // this.ctx.fillRect(
-        //     this.player.x,
-        //     this.player.y,
-        //     this.mazeObjSize,
-        //     this.mazeObjSize
-        // );
-        // this.drawObj(this.lvls[this.currentLvl]);
         this.player.x+=this.playerAcceleration[0];
         this.player.y+=this.playerAcceleration[1];
-        // this.ctx.fillStyle = 'red';
-        // this.ctx.fillRect(
-        //     this.playerCords[0],
-        //     this.playerCords[1],
-        //     this.mazeObjSize,
-        //     this.mazeObjSize
-        // );
-        this.ctx.drawImage(
-            this.playerCanvas,
-            this.player.x,
-            this.player.y
-        );
+        // this.ctx.fillStyle = 'yellow';
+        // this.ctx.fillRect(this.player.x,this.player.y,this.mazeObjSize,this.mazeObjSize);
+        this.ctx.strokeStyle = this.b;
+        this.ctx.lineWidth = 5;
+        this.ctx.beginPath();
+        this.ctx.arc(this.player.x,this.player.y,6,0,2*Math.PI);
+        this.ctx.stroke();
     },
     startMaze:function (lvlNumber) {
         this.currentLvl = parseInt(lvlNumber)-1;
@@ -190,6 +165,16 @@ const game = {
                     this.mazeObjSize,
                     this.mazeObjSize
                 );
+            }else if(mO[i].type === "finish"){
+                this.ctx.fillStyle = this.b;
+                this.ctx.fillRect(mO[i].x,mO[i].y,5,5);
+                this.ctx.fillRect(mO[i].x+10,mO[i].y,5,5);
+                this.ctx.fillRect(mO[i].x+5,mO[i].y+5,5,5);
+                this.ctx.fillRect(mO[i].x+15,mO[i].y+5,5,5);
+                this.ctx.fillRect(mO[i].x,mO[i].y+10,5,5);
+                this.ctx.fillRect(mO[i].x+10,mO[i].y+10,5,5);
+                this.ctx.fillRect(mO[i].x+5,mO[i].y+15,5,5);
+                this.ctx.fillRect(mO[i].x+15,mO[i].y+15,5,5);
             }
         }
     },
@@ -199,33 +184,43 @@ const game = {
         this.updatePlayer();
     },
     checkCollisions:function () {
-        for(let i = 0; i < this.lvls[this.currentLvl].mazeObjects.length; i++){
+        for (let i = 0; i < this.lvls[this.currentLvl].mazeObjects.length; i++) {
             let obj = this.lvls[this.currentLvl].mazeObjects[i];
-            // if((obj.x <= this.player.x  &&  obj.x+this.mazeObjSize > this.player.x)  &&  (obj.y < this.player.y  && obj.y+this.mazeObjSize >= this.player.y)){
-            //     this.playerAcceleration = [0,0];
-            //     // this.player.x =
-            // }
-            // Top
-            if(
-                (this.player.x >= obj.x && this.player.x <= obj.x+this.mazeObjSize)  &&
-                (this.player.y >= obj.y  &&  this.player.y <= obj.y + this.mazeObjSize)
-            ){
-                console.log('collide top');
+            if ( // Top
+            (this.player.x >= obj.x && this.player.x <= obj.x + this.mazeObjSize) &&
+            (this.player.y - this.mazeObjSize*2/5 >= obj.y && this.player.y - this.mazeObjSize*2/5 <= obj.y + this.mazeObjSize)
+            ) {
+                // obj.c = 'blue';
+                this.playerAcceleration = [0, 0];
+                this.player.y += 1;
+                // console.log(`X ${this.player.x+this.mazeObjSize} >= ${obj.x} && X ${this.player.x+this.mazeObjSize} <= ${obj.x+this.mazeObjSize}`);
             }
-            // // Left side
-            // if((ballY >= padTopY && ballY <= padBottomY) && (ballX >= padLeftX - ballArea && ballX <= padLeftX)){
-            //     ballDirX = 0;
-            // }
-            // // Right side
-            // if((ballY >= padTopY && ballY <= padBottomY) && (ballX >= padRightX && ballX <= padRightX + ballArea)){
-            //     ballDirX = 1;
-            // }
-            // Bottom side
-            if(
-                (this.player.x >= obj.x && this.player.x <= obj.x+this.mazeObjSize)  &&
-                (this.player.y+this.mazeObjSize >= obj.y  &&  this.player.y+this.mazeObjSize <= obj.y)
-            ){
-                console.log('collide bot');
+            if ( // Right
+            (this.player.y >= obj.y && this.player.y < obj.y + this.mazeObjSize) &&
+            (this.player.x + this.mazeObjSize*2/5 >= obj.x && this.player.x + this.mazeObjSize*2/5 <= obj.x + this.mazeObjSize)
+            ) {
+                // obj.c = 'green';
+                this.playerAcceleration = [0, 0];
+                this.player.x -= 1;
+                // console.log(`Y ${this.player.y} >= ${obj.y} && Y ${this.player.y} <= ${obj.y+this.mazeObjSize}`);
+            }
+            if ( // Left
+            (this.player.y >= obj.y && this.player.y <= obj.y + this.mazeObjSize) &&
+            (this.player.x - this.mazeObjSize*2/5 <= obj.x + this.mazeObjSize && this.player.x - this.mazeObjSize*2/5> obj.x)
+            ) {
+                // obj.c = 'yellow';
+                this.playerAcceleration = [0, 0];
+                this.player.x += 1;
+                // console.log('collide Left', this.player.x,this.player.y,obj.x,obj.y);
+            }
+            if ( // Bottom
+            (this.player.x >= obj.x && this.player.x <= obj.x + this.mazeObjSize) &&
+            (this.player.y + this.mazeObjSize*2/5 >= obj.y && this.player.y + this.mazeObjSize*2/5 <= obj.y + this.mazeObjSize)
+            ) {
+                // obj.c = 'red';
+                this.playerAcceleration = [0, 0];
+                this.player.y -= 1;
+                // console.log('collide Bottom', this.player.x,this.player.y,obj.x,obj.y);
             }
         }
     }
@@ -243,19 +238,29 @@ function generateTexts() {
     game.addText('царем майбутнє Одеси було під загрозою.');
     game.addText('Тому місцеві купці вирішили задобрити царя і');
     game.addText('відправити йому подарунок - 3000 апельсинів');
+    game.addText('Для цього вони вибрали найвправнішого - Мандарина.');
+    game.addText('Завантаживши апельсини на віз, він вирушив у дорогу.');
+    game.addText('Більшість доріг Одеси були викладені бруківкою,');
+    game.addText('тому віз сильно трясло і апельсини погубилися…');
     game.addText('Пройди лабіринт. Переміщення свайпами');   // maze
 }
 function generateCards() {
     game.addCard('img/c1.png');
     game.addCard('img/c2.png');
     game.addCard('img/c3.png');
+    game.addCard('img/c4.png');
+    game.addCard('img/c5.png');
+    game.addCard('img/c6.png');
 }
 function generateFrames() {
-    game.addFrame(['Як апельсини Одесу рятували','Керування лише мишкою'],['Для GDOCO 2018, ОНАХТ','Команда "Вісімнадцять по", Тернопіль']);
-    game.addFrame(0,[0,1]);
-    game.addFrame(1,[0,1]);
-    game.addFrame(2,[2,3]);
-    game.addFrame('1',[4,4]);   // maze 1
+    // game.addFrame(['Як апельсини Одесу рятували','Керування лише мишкою'],['Для GDOCO 2018, ОНАХТ','Команда "Вісімнадцять по", Тернопіль']);
+    // game.addFrame(0,[0,1]);
+    // game.addFrame(1,[0,1]);
+    // game.addFrame(2,[2,3]);
+    // game.addFrame(3,[4,5]);
+    // game.addFrame(4,[4,5]);
+    // game.addFrame(5,[6,7]);
+    game.addFrame('1',[8,8]);   // maze 1
 }
 function generateLvls() {
     let data = JSON.parse(lvlsData);
@@ -265,17 +270,11 @@ function generateLvls() {
         let player = '';
         for (let i = 0; i < pattern.length; i++) {    // 20 rows
             for (let j = 0; j < pattern[i].length; j++) { // 35 cols
-                /*if (pattern[i][j] == 0) { //empty
-                    continue;
-                } else */if (pattern[i][j] === 1) {
+                if (pattern[i][j] === 1) {
                     objects.push(new Obj(j, i, 'wall'));
                 } else if (pattern[i][j] === 2) {
                     player = new Obj(j, i, 'player');
                 } else if (pattern[i][j] === 3) {
-                    objects.push(new Obj(j, i, 'friend'));
-                } else if (pattern[i][j] === 4) {
-                    objects.push(new Obj(j, i, 'enemy'));
-                } else if (pattern[i][j] === 5) {
                     objects.push(new Obj(j, i, 'finish'));
                 }
             }
@@ -288,10 +287,11 @@ function generateLvls() {
     }
 }
 class Obj{
-    constructor(x,y,type = 'empty'){
+    constructor(x,y,type = 'empty',c = 'black'){
         this.x = x;
         this.y = y;
         this.type = type;
+        this.c = c;
     }
 }
 function mouseMoveEvent(ev) {
@@ -305,6 +305,7 @@ function mouseDownEvent() {
         game.nFrame(game.nextFrame);
     }else{
         game.mouseStart = game.mouse;
+        game.playerAcceleration = [0, 0];
     }
 }
 function mouseUpEvent() {
@@ -315,48 +316,19 @@ function mouseUpEvent() {
             v: game.mouseStart.y - mouseEnd.y,
         };
         if (dir.h > 0 && Math.abs(dir.h) > Math.abs(dir.v)) { //left
-            console.log('l');
-            game.playerAcceleration = [1, 0];
+            game.playerAcceleration = [2, 0];
         } else if (dir.h < 0 && Math.abs(dir.h) > Math.abs(dir.v)) {    //right
-            console.log('r');
-            game.playerAcceleration = [-1, 0];
+            game.playerAcceleration = [-2, 0];
         } else if (dir.v > 0 && Math.abs(dir.h) < Math.abs(dir.v)) {    //up
-            console.log('u');
-            game.playerAcceleration = [0, 1];
+            game.playerAcceleration = [0, 2];
         } else if (dir.v < 0 && Math.abs(dir.h) < Math.abs(dir.v)) {    //down
-            console.log('d');
-            game.playerAcceleration = [0, -1];
+            game.playerAcceleration = [0, -2];
         }
     }
 }
 function update() {
     game.updateScreen();
-    // console.log('a')
 }
 function prevent(ev) {
     ev.preventDefault();
 }
-
-
-
-    function keyDown(e){
-        if(e.shiftKey){
-            shift = true;
-        }else{
-            shift = false;
-        }
-        kCode = e.keyCode;
-    }
-    function keyUp() {
-        kCode = 0;
-    }
-
-
-// $(game.canvas).on("click mousedown mouseup mousemove dragstart dragend",function(e){
-//     if(e.type == 'dragstart'){
-//         console.log('start');
-//     }else if(e.type == 'dragend'){
-//         console.log('end');
-//     }
-//     // console.log(e.type);
-// });
